@@ -1,6 +1,6 @@
 {
   "name": "joshbeard-aide",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "summary": "A puppet module for installing and configuring aide",
   "author": "joshbeard",
   "description": "A puppet module for setting up and configuring aide (Advanced Intrusion Detection System) via puppet.",

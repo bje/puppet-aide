@@ -1,3 +1,8 @@
+## puppet/aide-2.0.2
+
+ - Fix filename for initialize
+ - Add newlines after exclude rules
+
 ## puppet/aide-2.0.0
 
  - Add more configuration options, including gzip, verbose, and summarized changes.
