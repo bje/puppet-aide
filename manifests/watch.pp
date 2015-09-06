@@ -1,8 +1,9 @@
 # aide::watch defines a path/rule combination in the aide.conf file
-define aide::watch ( $path = $name,
+define aide::watch (
+  $path  = $title,
   $type  = 'regular',
   $rules = undef,
-  $order = 50
+  $order = '50',
 ) {
   include aide
 
@@ -21,6 +22,6 @@ define aide::watch ( $path = $name,
   concat::fragment { $title:
     target  => 'aide.conf',
     order   => $order,
-    content => $content
+    content => $content,
   }
 }
