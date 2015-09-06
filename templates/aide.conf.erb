@@ -1,3 +1,20 @@
-database=file:<%= @db_path %>
-database_out=file:<%= @db_temp_path %>
-database_new=file:<%= @db_temp_path %>
+# AIDE configuration
+# This file is managed by Puppet
+
+# The location of the database to be read.
+database=file:<%= @db_file %>
+
+# The location of the database to be written.
+database_out=file:<%= @db_out %>
+database_new=file:<%= @db_new %>
+
+verbose=<%= @verbose %>
+gzip_dbout=<%= @gzip_dbout %>
+
+<%- @report_url.each do |report| -%>
+report_url=<%= report %>
+<%- end -%>
+
+# Set to no to disable summarize_changes option.
+summarize_changes=<%= @summarize_changes %>
+

@@ -6,7 +6,7 @@ define aide::rule ($rules) {
 
   concat::fragment { $name:
     target  => 'aide.conf',
-    order   => 03,
-    content => inline_template("${name} = <%= @_rules.join('+') %>\n")
+    order   => '03',
+    content => inline_template("${title} = <%= @_rules.join('+') %>\n")
   }
 }
