@@ -7,29 +7,44 @@ class aide (
   $db_file                         = '/var/lib/aide/aide.db.gz',
   $db_out                          = '/var/lib/aide/aide.db.new.gz',
   $db_new                          = '/var/lib/aide/aide.db.new.gz',
-  $manage_cron                     = true,
-  $cron_template                   = undef,
-  $hour                            = '0',
+  $cron_script_template            = undef,
+  $cron_script_target              = undef,
   $gzip_dbout                      = 'yes',
   $verbose                         = '5',
   $report_url                      = [ 'file:/var/lib/aide/aide.log' ],
   $summarize_changes               = 'yes',
+  $initialize                      = true,
+  $init_nice                       = '19',
 ) inherits aide::params {
 
-  include '::aide::install'
-  include '::aide::config'
-  include '::aide::firstrun'
+  validate_absolute_path($db_dir)
+  validate_absolute_path($db_file)
+  validate_absolute_path($db_out)
+  validate_absolute_path($db_new)
+  validate_re($gzip_dbout, '^(yes|no)$')
+  validate_re($verbose, '^\d+')
+  validate_re($summarize_changes, '^(yes|no)$')
 
-  if $manage_cron or $cron_template {
+  include '::aide::package'
+  include '::aide::config'
+  include '::aide::initialize'
+
+  if $initialize {
+    include '::aide::initialize'
+    Class['::aide::config'] ~>
+    Class['::aide::initialize']
+  }
+
+  if $cron_script_template {
+    validate_absolute_path($cron_script_target)
     include '::aide::cron'
-    Class['::aide::firstrun'] ->
+    Class['::aide::config'] ->
     Class['::aide::cron']
   }
 
   anchor { 'aide::begin': } ->
-  Class['::aide::install'] ->
-  Class['::aide::config'] ~>
-  Class['::aide::firstrun'] ->
+  Class['::aide::package'] ->
+  Class['::aide::config'] ->
   anchor { 'aide::end': }
 
 }

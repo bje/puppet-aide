@@ -1,22 +1,22 @@
 {
-  "name": "mklauber-aide",
-  "version": "1.1.0",
+  "name": "joshbeard-aide",
+  "version": "2.0.0",
   "summary": "A puppet module for installing and configuring aide",
-  "author": "Matthew Lauber",
+  "author": "joshbeard",
   "description": "A puppet module for setting up and configuring aide (Advanced Intrusion Detection System) via puppet.",
   "dependencies": [
     {
-      "name": "puppetlabs/concat",
-      "version_requirement": "\u003e\u003d1.0.0"
+      "name": "puppetlabs-stdlib",
+      "version_requirement": ">= 1.0.0"
     },
     {
-      "name": "puppetlabs/stdlib",
-      "version_requirement": "\u003e\u003d3.0.0"
+      "name": "puppetlabs/concat",
+      "version_requirement": ">= 1.0.0"
     }
   ],
   "types": [],
   "checksums": {},
-  "source": "https://github.com/mklauber/aide",
-  "project_page": "https://github.com/mklauber/puppet-aidee",
+  "source": "https://github.com/joshbeard/puppet-aide/",
+  "project_page": "https://github.com/joshbeard/puppet-aide/",
   "license": "Apache Version 2.0"
 }

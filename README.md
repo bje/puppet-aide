@@ -1,85 +1,228 @@
-mklauber-aide
-===========
+# puppet-aide
 
-Build Status: [![Build Status](https://travis-ci.org/mklauber/puppet-aide.png)](https://travis-ci.org/mklauber/puppet-aide)
+## Overview
 
-`mklauber/aide` is a puppet module for managing Aide (Advanced Intrustion Detection Environment). It allows you to define Rules and File/folder watches via defined types.  Refer to the Aide [manual](http://aide.sourceforge.net/stable/manual.html) for details about Aide configuration options.
+This is a fork of [mklauber-aide](https://forge.puppetlabs.com/mklauber/aide/)
 
+`aide` is a puppet module for managing Aide (Advanced Intrustion Detection
+Environment). It allows you to define Rules and File/folder watches via defined
+types.  Refer to the Aide
+[manual](http://aide.sourceforge.net/stable/manual.html) for details about Aide
+configuration options.
 
-Examples
-==========
+Difference between the _puppet-aide_ fork and the original module:
 
-Watch permissions of all files on filesystem
-----------
+* Add more configuration options, including gzip, verbose, and summarized
+  changes.
+* Make cron management optional
+* Allow a custom script to be managed by the module for a cron job
+* Make initializing optional (first run creation of database)
+* Allow the initialization to run with 'nice'
+* Support multiple `report_url` configurations
+* Rename variables to map to the AIDE config file values
+* Add parameter validation
+* Syntax fixups
+* Remove the cron resources. It was not flexible enough to make sense here, imo
 
-The simplest use of `mklauber/aide` is to place a watch on the root directory, as follows.
+## Usage
 
-    aide::watch { 'example':
-      path  => '/',
-      rules => 'p'
-    }
-    
-This example adds the line `/ R` which watches the permissions of all files on the operating system.  Obviously, this is a simplistic, non useful solution.
+### 1. Declare the base class
 
-Watch permissions and md5sums of all files in /etc
-----------
+```puppet
+class { '::aide':
+  cron_script_template => 'profile/base/linux/aide.cron.sh.erb',
+  cron_script_target   => '/etc/cron.weekly/aide',
+}
+```
 
-    aide::watch { 'example':
-      path  => '/etc',
-      rules => 'p+md5'
-    }
-    
-This example adds the line `/etc p+md5` which watches `/etc` with both permissions and md5sums.  This could also be implemented as follows.
+### 2. Manage rules
 
-    aide::watch { 'example':
-      path  => '/etc',
-      rules => ['p', 'md5']
-    }
-    
+```puppet
+aide::rule { 'NORMAL':
+  rules => [ 'p','u','g','s','md5' ],
+}
+```
 
-Create a common rule for watching multiple directories
------------
+### 3. Manage files to monitor
 
-Sometimes you wish to use the same rule to watch multiple directories, and in keeping with the Don't Repeat Yourself(DRY) viewpoint, we should create a common name for the rule.  This can be done via the `aide::rule` stanza.
+```puppet
+aide::watch { '/boot':
+  rules => [ 'NORMAL' ],
+}
+```
 
-    aide::rule { 'MyRule':
-      name  => 'MyRule',
-      rules => ['p', 'md5']
-    }
-    aide::watch { '/etc':
-      path  => '/etc',
-      rules => 'MyRule'
-    }
-    aide::watch { 'otherApp':
-      path  => '/path/to/other/config/dir',
-      rules => 'MyRule'
-    }
+## Examples
 
-Here we are defining a rule in called **MyRule** which will add the line `MyRule = p+md5`.  The next two stanzas can reference that rule.  They will show up as `/etc MyRule` and `/path/to/other/config/dir MyRule`.
+### Create a rule to exlude directories
 
-Create a rule to exlude directories
------------
-
-    aide::watch { '/var/log':
-      path => '/etc',
-      type => 'exclude' 
-    }
+```puppet
+aide::watch { '/var/log':
+  type => 'exclude'
+}
+```
 
 This with ignore all files under /var/log.  It adds the line `!/var/log` to the config file.
 
-Create a rule to specify only specific files
------------
+### Create a rule to specify only specific files
 
-    aide::watch { '/var/log/messages':
-      path => '/etc',
-      type => 'equals',
-      rules => 'MyRule'
-    }
+```puppet
+aide::watch { '/var/log/messages':
+  type => 'equals',
+  rules => 'MyRule'
+}
+```
 
 This with watch only the file /var/log/messages.  It will ignore /var/log/messages/thingie.  It adds the line `=/var/log/messages MyRule` to the config file.
 
 
+## Reference
 
+### Class: `aide`
 
+__package__
 
+Default: 'aide'
 
+The name of the package to manage.
+
+__version__
+
+Default: 'installed'
+
+The state of the package to manage.  Could be a version number, 'present',
+or 'latest', for example.  Uses operating system repositories with a `package`
+resource.
+
+__conf_path__
+
+Default: Refer to [manifests/params.pp](manifests/params.pp)
+
+The path to the AIDE configuration file (aide.conf).
+
+__db_dir__
+
+Default: '/var/lib/aide'
+
+Absolute path the the AIDE databases.
+
+__db_file__
+
+Default: '/var/lib/aide/aide.db.gz'
+
+Maps to the AIDE configuration option.
+
+__db_out__
+
+Default: '/var/lib/aide/aide.db.new.gz'
+
+Maps to the AIDE configuration option.
+
+__db_new__
+
+Default: '/var/lib/aide/aide.db.new.gz'
+
+Maps to the AIDE configuration option.
+
+__cron_script_template__
+
+Default: undef
+
+If provided, this should point to a template file (.erb) to use as a script
+for running AIDE.  A script isn't provided by the module, as they vary.
+Usually, a cron script will run a check, update the database with the current
+state, and send a report.
+
+The point here is to let you manage your own cron script but use the
+parameter values from this module in it.
+
+Example: `profile/base/linux/aide.cron.erb`
+
+__cron_script_target__
+
+Default: undef
+
+If `cron_script_template` is provided, this parameter should be set to an
+absolute path to manage the script.
+
+Example: `/etc/cron.weekly/aide`
+
+__gzip_dbout__
+
+Default: 'yes'
+
+Maps to the AIDE configuration option.
+
+__verbose__
+
+Default: '5'
+
+Maps to the AIDE configuration option.
+
+__report_url__
+
+Default: [ 'file:/var/lib/aide/aide.log' ]
+
+An array of places to send the report.  For example, a static file (as seen
+here) and syslog.
+
+__summarize_changes__
+
+Default: 'yes'
+
+Maps to the AIDE configuration option.
+
+__initialize__
+
+Default: true
+
+Whether this module should be responsible for the initialization of the AIDE
+database.  This will have Puppet execute the `aide -i` to create the database
+and copy that database to the `db_out` location for comparison.
+
+Note that this initialization can take quite a while and cause quite a bit of
+system load.
+
+__init_nice__
+
+Default: '19'
+
+If `initialize` is true, this value should be a value for the `nice` command
+for running it.  Refer to the `nice` man page for information.  Basically,
+-19 gives it the highest priority and 19 gives it last priority.
+
+### Defined type: `aide::rule`
+
+__rules__
+
+An array containing the rules.
+
+For example:
+
+```puppet
+aide::rule { 'NORMAL':
+  rules => [ 'p','u','g','s','md5' ],
+}
+```
+
+Refer to AIDE's man page to determine what the rule values mean.
+
+### Defined type: `aide::watch`
+
+__path__
+
+Defaults to $title
+
+__type__
+
+Default: 'regular'
+
+Valid values: regular, equals, exclude
+
+'regular' is a regular watched resource. Equals will watch the explicit
+resource, not recursively.  Exclude will exclude the resource.
+
+__rules__
+
+Default: undef
+
+The rules to apply to this watched resource
