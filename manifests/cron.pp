@@ -2,9 +2,6 @@
 class aide::cron inherits aide {
 
   if $::aide::cron_script_template {
-    notice("Managing cron")
-    notice("path: ${::aide::cron_script_target}")
-    notice("template: ${::aide::cron_script_template}")
     file { 'aide.cron.sh':
       ensure  => 'file',
       owner   => 'root',
